@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import './App.css';
 import ProgressBar from './components/ProgressBar';
 import SubmitButton from './components/SubmitButton';
@@ -6,14 +6,16 @@ import FileDetails from './components/FileDetails';
 import Dropzone from './components/Dropzone';
 import Textarea from './components/Textarea';
 import { useHash } from './hooks/useHash';
+import { ErrorMessages } from './const';
 
 function App() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<Blob | undefined>();
   const [fileName, setFileName] = useState();
   const [fileSize, setFileSize] = useState();
+  const [_, startTransition] = useTransition();
 
-  const { readFile, hash, error, progress } = useHash();
+  const { readFile, hash, error, progress } = useHash(file);
 
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<any>) => {
@@ -29,20 +31,11 @@ function App() {
 
   const handleSubmit = useCallback(
     async (event) => {
-      if (!file) {
-        return;
-      }
+      event.preventDefault();
 
-      try {
-        readFile(file);
-        // show a success toast notification
-        // showToast('Message sent successfully', 'success');
-        debugger;
-      } catch (error) {
-        // show an error toast notification
-        // showToast('Message sending failed', 'error');
-        return error;
-      }
+      startTransition(() => {
+        readFile();
+      });
     },
     [file]
   );
@@ -55,9 +48,18 @@ function App() {
     <form onSubmit={handleSubmit}>
       <div className="flex items-center justify-center w-full gap-4 flex-col">
         <Dropzone id="file" onChange={handleFileChange} />
-        {error && <div className="text-blue-700">{error}</div>}
+        {error && (
+          <div className="bg-blue-700 text-white w-full p-1">{error}</div>
+        )}
         {progress === 0 ? (
-          <SubmitButton text={error ? 'Retry' : 'Get SHA256'} />
+          <SubmitButton
+            disabled={error === ErrorMessages.fileTooBig}
+            text={
+              error && error !== ErrorMessages.fileTooBig
+                ? 'Retry'
+                : 'Get SHA256'
+            }
+          />
         ) : (
           <ProgressBar value={progress} />
         )}
