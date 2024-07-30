@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { blobToHash, toMBString } from '../helpers/file';
 import { ErrorMessages } from '../const';
 
-const maxFileSize = 10000;
+const maxFileSize = 50;
 
 export const useHash = (file?: Blob) => {
   const [progress, setProgress] = useState(0);
@@ -53,7 +53,6 @@ export const useHash = (file?: Blob) => {
       if (typeof entry.target?.result === 'string') {
         return;
       }
-
       setHash(
         blobToHash(await crypto.subtle.digest('SHA-256', entry.target.result))
       );

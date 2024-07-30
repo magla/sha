@@ -1,17 +1,27 @@
-import { ChangeEvent, ChangeEventHandler, useCallback, useState } from 'react';
+import { ChangeEvent, useCallback, useRef, useState } from 'react';
+import { sanitizeFilename } from '../helpers/file';
 
 const Dropzone = ({
   id,
   onChange,
 }: {
   id: string;
-  onChange?: ChangeEventHandler<HTMLInputElement>;
+  onChange?: (file: File, name: string) => void;
 }) => {
+  const hiddenFileInput = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | undefined>();
 
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    setFileName(event.target.value);
-    onChange && onChange(event);
+    const files = Array.from(event.target.files || []);
+
+    if (!files.length || !files[0].name) {
+      return;
+    }
+
+    const sanitizedName = sanitizeFilename(files[0].name);
+
+    setFileName(sanitizedName);
+    onChange && onChange(files[0], sanitizedName);
   }, []);
 
   return (
@@ -45,7 +55,13 @@ const Dropzone = ({
         </div>
       )}
 
-      <input id={id} type="file" className="hidden" onChange={handleChange} />
+      <input
+        ref={hiddenFileInput}
+        id={id}
+        type="file"
+        className="hidden"
+        onChange={handleChange}
+      />
     </label>
   );
 };
