@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { blobToHash } from '../helpers/file';
+import { blobToHash, toMBString } from '../helpers/file';
 import { ErrorMessages } from '../const';
 
 const maxFileSize = 10000;
@@ -18,20 +18,27 @@ export const useHash = (file?: Blob) => {
       return;
     }
 
-    const fileSize = parseFloat((file.size / 1024 / 1024).toFixed(4)); // MB
+    const fileSize = toMBString(file.size); // MB
 
     if (fileSize > maxFileSize) {
       setError(ErrorMessages.fileTooBig);
     }
   }, [file]);
 
+  const handleLoadStart = useCallback(
+    async (_event: ProgressEvent<FileReader>) => {
+      setProgress(0);
+    },
+    []
+  );
+
   const handleError = useCallback(async (event: ProgressEvent<FileReader>) => {
     setError(event.target?.error?.message);
+    setProgress(0);
   }, []);
 
   const handleProgress = useCallback(
     async (event: ProgressEvent<FileReader>) => {
-      console.log(event.loaded, event.total, event.loaded / event.total);
       setProgress((event.loaded / event.total) * 100);
     },
     []
@@ -62,6 +69,7 @@ export const useHash = (file?: Blob) => {
     }
 
     fileReader.readAsArrayBuffer(file);
+    fileReader.onloadstart = handleLoadStart;
     fileReader.onerror = handleError;
     fileReader.onprogress = handleProgress;
     fileReader.onloadend = handleLoadEnd;

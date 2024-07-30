@@ -11,7 +11,6 @@ const Dropzone = ({
 
   const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setFileName(event.target.value);
-
     onChange && onChange(event);
   }, []);
 

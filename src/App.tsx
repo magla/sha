@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import './App.css';
 import ProgressBar from './components/ProgressBar';
 import SubmitButton from './components/SubmitButton';
@@ -11,8 +11,8 @@ import { ErrorMessages } from './const';
 function App() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<Blob | undefined>();
-  const [fileName, setFileName] = useState();
-  const [fileSize, setFileSize] = useState();
+  const [fileName, setFileName] = useState<string | undefined>();
+  const [fileSize, setFileSize] = useState<number | undefined>();
   const [_, startTransition] = useTransition();
 
   const { readFile, hash, error, progress } = useHash(file);
@@ -25,12 +25,13 @@ function App() {
       setFile(newFile);
       setFileName(newFile.name);
       setFileSize(newFile.size);
+      setDescription('');
     },
     []
   );
 
   const handleSubmit = useCallback(
-    async (event) => {
+    async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
       startTransition(() => {
@@ -40,9 +41,9 @@ function App() {
     [file]
   );
 
-  useEffect(() => {
-    // error && showToast(error);
-  }, [error]);
+  const done = useMemo(() => {
+    return progress === 100;
+  }, [progress]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -63,10 +64,13 @@ function App() {
         ) : (
           <ProgressBar value={progress} />
         )}
-        <Textarea
-          placeholder="Write file description here"
-          onChange={(e) => setDescription(e.currentTarget.value)}
-        />
+        {!done && (
+          <Textarea
+            placeholder="Write file description here"
+            onChange={(e) => setDescription(e.currentTarget.value)}
+          />
+        )}
+
         {hash && (
           <FileDetails
             hash={hash}

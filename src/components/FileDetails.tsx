@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import CopyButton from './CopyButton';
+import { toMBString } from '../helpers/file';
 
 const FileDetails = ({
   hash,
@@ -12,7 +13,7 @@ const FileDetails = ({
   size?: number;
   description?: string;
 }) => {
-  const fileSize = size && (size / 1024 / 1024).toFixed(4); // MB
+  const fileSize = toMBString(size);
 
   const handleCopyClick = useCallback(() => {
     navigator.clipboard.writeText(hash);

@@ -6,10 +6,13 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
     'plugin:react-hooks/recommended',
-    // This disables the formatting rules in ESLint that Prettier is going to be responsible for handling.
-    // Make sure it's always the last config, so it gets the chance to override other configs.
+    'plugin:@typescript-eslint/recommended-type-checked',
     'prettier',
   ],
+  ecmaVersion: 'latest',
+  sourceType: 'module',
+  project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
+  tsconfigRootDir: __dirname,
   ignorePatterns: ['dist', '.eslintrc.cjs'],
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   settings: { react: { version: '18.2' } },
