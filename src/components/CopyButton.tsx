@@ -7,7 +7,7 @@ const CopyButton = ({ onClick }: { onClick?: () => void }) => {
         type="button"
         data-tooltip-target="tooltip-click"
         onClick={onClick}
-        className="bg-gray-200 hover:bg-gray-400 text-gray-800 p-1 rounded"
+        className="p-1 text-gray-800 bg-gray-200 rounded hover:bg-gray-400"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

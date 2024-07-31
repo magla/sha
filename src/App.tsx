@@ -1,47 +1,46 @@
 import { useCallback, useMemo, useState, useTransition } from 'react';
 import './App.css';
-import ProgressBar from './components/ProgressBar';
-import SubmitButton from './components/SubmitButton';
-import FileDetails from './components/FileDetails';
-import Dropzone from './components/Dropzone';
-import Textarea from './components/Textarea';
 import { useHash } from './hooks/useHash';
 import { ErrorMessages } from './const';
 import { sanitizeFilename } from './helpers/file';
+import {
+  Dropzone,
+  FileDetails,
+  ProgressBar,
+  SubmitButton,
+  Textarea,
+} from './components';
 
 function App() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<Blob | undefined>();
   const [fileName, setFileName] = useState<string | undefined>();
   const [fileSize, setFileSize] = useState<number | undefined>();
-  const [_, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   const { readFile, hash, error, progress } = useHash(file);
 
-  const handleFileChange = useCallback(
-    async (file: File, sanitizedName: string) => {
-      setFile(file);
-      setFileName(sanitizeFilename(sanitizedName));
-      setFileSize(file.size);
-      setDescription('');
-    },
-    []
-  );
+  const handleFileChange = useCallback((file: File, sanitizedName: string) => {
+    setFile(file);
+    setFileName(sanitizeFilename(sanitizedName));
+    setFileSize(file.size);
+    setDescription('');
+  }, []);
 
   const handleSubmit = useCallback(
-    async (event: React.FormEvent<HTMLFormElement>) => {
+    (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
       startTransition(() => {
         readFile();
       });
     },
-    [file]
+    [readFile]
   );
 
   const done = useMemo(() => {
-    return progress === 100;
-  }, [progress]);
+    return progress === 100 && !isPending;
+  }, [isPending, progress]);
 
   return (
     <form onSubmit={handleSubmit} role="form">
@@ -53,14 +52,10 @@ function App() {
         {progress === 0 ? (
           <SubmitButton
             disabled={error === ErrorMessages.fileTooBig}
-            text={
-              error && error !== ErrorMessages.fileTooBig
-                ? 'Retry'
-                : 'Get SHA256'
-            }
+            text={error ? 'Retry' : 'Get SHA256'}
           />
         ) : (
-          <ProgressBar value={progress} />
+          <ProgressBar value={progress} isDone={done} />
         )}
         {!done && (
           <Textarea

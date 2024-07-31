@@ -11,18 +11,21 @@ const Dropzone = ({
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | undefined>();
 
-  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files || []);
 
-    if (!files.length || !files[0].name) {
-      return;
-    }
+      if (!files.length || !files[0].name) {
+        return;
+      }
 
-    const sanitizedName = sanitizeFilename(files[0].name);
+      const sanitizedName = sanitizeFilename(files[0].name);
 
-    setFileName(sanitizedName);
-    onChange && onChange(files[0], sanitizedName);
-  }, []);
+      setFileName(sanitizedName);
+      onChange && onChange(files[0], sanitizedName);
+    },
+    [onChange]
+  );
 
   return (
     <label

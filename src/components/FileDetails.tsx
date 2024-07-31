@@ -16,7 +16,7 @@ const FileDetails = ({
   const fileSize = toMBString(size);
 
   const handleCopyClick = useCallback(() => {
-    navigator.clipboard.writeText(hash);
+    void navigator.clipboard.writeText(hash);
   }, [hash]);
 
   return (
