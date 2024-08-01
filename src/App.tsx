@@ -1,71 +1,75 @@
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
-import ProgressBar from './components/ProgressBar';
-import SubmitButton from './components/SubmitButton';
-import FileDetails from './components/FileDetails';
-import Dropzone from './components/Dropzone';
-import Textarea from './components/Textarea';
 import { useHash } from './hooks/useHash';
 import { ErrorMessages } from './const';
+import { sanitizeFilename } from './helpers/file';
+import {
+  Dropzone,
+  FileDetails,
+  ProgressBar,
+  SubmitButton,
+  Textarea,
+} from './components';
 
 function App() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<Blob | undefined>();
-  const [fileName, setFileName] = useState();
-  const [fileSize, setFileSize] = useState();
-  const [_, startTransition] = useTransition();
+  const [fileName, setFileName] = useState<string | undefined>();
+  const [fileSize, setFileSize] = useState<number | undefined>();
+  const [isPending, setIsPending] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { readFile, hash, error, progress } = useHash(file);
 
-  const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<any>) => {
-      const inputElement = event.currentTarget;
-      const newFile = inputElement.files[0];
+  const handleFileChange = useCallback((file: File, sanitizedName: string) => {
+    setFile(file);
+    setFileName(sanitizeFilename(sanitizedName));
+    setFileSize(file.size);
+    setIsPending(false);
 
-      setFile(newFile);
-      setFileName(newFile.name);
-      setFileSize(newFile.size);
-    },
-    []
-  );
+    if (textareaRef.current) {
+      textareaRef.current.value = '';
+    }
+  }, []);
 
   const handleSubmit = useCallback(
-    async (event) => {
+    (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      startTransition(() => {
-        readFile();
-      });
+      setIsPending(true);
+      readFile();
     },
-    [file]
+    [readFile]
   );
 
   useEffect(() => {
-    // error && showToast(error);
-  }, [error]);
+    if (progress === 100 || error) {
+      setIsPending(false);
+    }
+  }, [progress, error]);
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="flex items-center justify-center w-full gap-4 flex-col">
-        <Dropzone id="file" onChange={handleFileChange} />
+    <form onSubmit={handleSubmit} role="form">
+      <div className="flex flex-col items-center justify-center w-full gap-4">
+        <Dropzone id="file" onChange={handleFileChange} disabled={false} />
         {error && (
-          <div className="bg-blue-700 text-white w-full p-1">{error}</div>
+          <div className="w-full p-1 text-white bg-blue-700">{error}</div>
         )}
-        {progress === 0 ? (
+        {!isPending && !hash ? (
           <SubmitButton
             disabled={error === ErrorMessages.fileTooBig}
-            text={
-              error && error !== ErrorMessages.fileTooBig
-                ? 'Retry'
-                : 'Get SHA256'
-            }
+            text={error ? 'Retry' : 'Get SHA256'}
           />
         ) : (
-          <ProgressBar value={progress} />
+          <ProgressBar value={progress} isDone={!isPending} />
         )}
         <Textarea
+          disabled={!!hash}
+          ref={textareaRef}
+          id="description-textarea"
           placeholder="Write file description here"
-          onChange={(e) => setDescription(e.currentTarget.value)}
+          onChange={setDescription}
         />
         {hash && (
           <FileDetails

@@ -21,7 +21,7 @@ const Tooltip = ({
     >
       {children}
       <div
-        className={`absolute left-1/2 bottom-6 ml-auto mr-auto min-w-max -translate-x-1/2 rounded-lg px-3 py-2 text-xs font-medium scale-0 ${show && 'animate-showShort'}`}
+        className={`absolute bottom-6 ml-auto mr-auto min-w-max -translate-x-1/2 rounded-lg px-3 py-2 text-xs font-medium scale-0 ${show && 'animate-showShort'}`}
       >
         <div className="flex max-w-xs flex-col items-center shadow-lg">
           <div className="rounded bg-gray-800 p-2 text-center text-xs text-white">
