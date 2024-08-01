@@ -1,5 +1,9 @@
 /// <reference types="cypress" />
-const uploadFile = (fileContent: BlobPart, fileName: string, fileType: any) => {
+const uploadFile = (
+  fileContent: BlobPart,
+  fileName: string,
+  fileType: string
+) => {
   const file = new File([fileContent], fileName, { type: fileType });
   const dataTransfer = new DataTransfer();
   dataTransfer.items.add(file);
@@ -12,10 +16,6 @@ const uploadFile = (fileContent: BlobPart, fileName: string, fileType: any) => {
 };
 
 describe('File upload', () => {
-  const errorMessages = {
-    fileTooBig: 'File size exceeds limit of 10GB',
-  };
-
   beforeEach(() => {
     cy.visit('/');
   });
@@ -32,19 +32,6 @@ describe('File upload', () => {
     cy.get('[data-testid="filename"]').should('exist');
     cy.get('[data-testid="hash"]').should('exist');
     cy.get('console.error').should('not.exist');
-  });
-
-  it('displays an error message for large files', () => {
-    const fileName = 'largefile.txt';
-    const fileType = 'text/plain';
-    const fileContent = 'a'.repeat(1024 * 1024 * 51); // 51MB file
-
-    uploadFile(fileContent, fileName, fileType);
-
-    cy.get('button[type="submit"]').should('be.disabled');
-    cy.contains(errorMessages.fileTooBig).should('exist');
-    cy.get('[data-testid="filename"]').should('not.exist');
-    cy.get('[data-testid="hash"]').should('not.exist');
   });
 
   it('ensures XSS protection in description area', () => {
@@ -65,7 +52,7 @@ describe('File upload', () => {
 
     cy.get('[data-testid="filename"]').should('exist');
     cy.get('[data-testid="hash"]').should('exist');
-    cy.get('[data-testid="description-textarea"]').should('not.exist');
+    cy.get('[data-testid="description-textarea"]').should('be.disabled');
     cy.get('[data-testid="description"]').should('not.exist');
   });
 

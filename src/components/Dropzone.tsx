@@ -4,9 +4,11 @@ import { sanitizeFilename } from '../helpers/file';
 const Dropzone = ({
   id,
   onChange,
+  disabled,
 }: {
   id: string;
   onChange?: (file: File, name: string) => void;
+  disabled: boolean;
 }) => {
   const hiddenFileInput = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | undefined>();
@@ -59,6 +61,7 @@ const Dropzone = ({
       )}
 
       <input
+        disabled={disabled}
         ref={hiddenFileInput}
         id={id}
         type="file"
