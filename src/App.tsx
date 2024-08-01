@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import './App.css';
 import { useHash } from './hooks/useHash';
 import { ErrorMessages } from './const';
@@ -16,7 +16,9 @@ function App() {
   const [file, setFile] = useState<Blob | undefined>();
   const [fileName, setFileName] = useState<string | undefined>();
   const [fileSize, setFileSize] = useState<number | undefined>();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { readFile, hash, error, progress } = useHash(file);
 
@@ -24,46 +26,51 @@ function App() {
     setFile(file);
     setFileName(sanitizeFilename(sanitizedName));
     setFileSize(file.size);
-    setDescription('');
+    setIsPending(false);
+
+    if (textareaRef.current) {
+      textareaRef.current.value = '';
+    }
   }, []);
 
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      startTransition(() => {
-        readFile();
-      });
+      setIsPending(true);
+      readFile();
     },
     [readFile]
   );
 
-  const done = useMemo(() => {
-    return progress === 100 && !isPending;
-  }, [isPending, progress]);
+  useEffect(() => {
+    if (progress === 100 || error) {
+      setIsPending(false);
+    }
+  }, [progress, error]);
 
   return (
     <form onSubmit={handleSubmit} role="form">
       <div className="flex flex-col items-center justify-center w-full gap-4">
-        <Dropzone id="file" onChange={handleFileChange} />
+        <Dropzone id="file" onChange={handleFileChange} disabled={false} />
         {error && (
           <div className="w-full p-1 text-white bg-blue-700">{error}</div>
         )}
-        {progress === 0 ? (
+        {!isPending && !hash ? (
           <SubmitButton
             disabled={error === ErrorMessages.fileTooBig}
             text={error ? 'Retry' : 'Get SHA256'}
           />
         ) : (
-          <ProgressBar value={progress} isDone={done} />
+          <ProgressBar value={progress} isDone={!isPending} />
         )}
-        {!done && (
-          <Textarea
-            id="description-textarea"
-            placeholder="Write file description here"
-            onChange={setDescription}
-          />
-        )}
+        <Textarea
+          disabled={!!hash}
+          ref={textareaRef}
+          id="description-textarea"
+          placeholder="Write file description here"
+          onChange={setDescription}
+        />
         {hash && (
           <FileDetails
             hash={hash}

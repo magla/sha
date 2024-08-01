@@ -4,12 +4,12 @@
 
 1. Run `yarn`
 2. Run `yarn dev`
-3. Open `http://localhost:3000/` in browser
 
 ## Production
 
 1. Run `yarn`
 2. Run `yarn build`
+3. Run `yarn preview`
 
 ## Testing
 

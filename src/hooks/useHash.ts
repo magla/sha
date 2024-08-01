@@ -1,74 +1,46 @@
 import { useCallback, useEffect, useState } from 'react';
-import { blobToHash, toMBString } from '../helpers/file';
-import { ErrorMessages } from '../const';
-
-const maxFileSize = 10000;
+import { useWebWorker } from './useWebWorker';
 
 export const useHash = (file?: Blob) => {
-  const [progress, setProgress] = useState(0);
   const [hash, setHash] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [progress, setProgress] = useState<number | null>(null);
 
-  useEffect(() => {
+  const { response, callWorker, terminateWorker } = useWebWorker();
+
+  const resetState = useCallback(() => {
     setHash(undefined);
     setError(undefined);
-    setProgress(0);
+    setProgress(null);
+    terminateWorker();
+  }, [terminateWorker]);
 
-    if (!file) {
-      return;
+  useEffect(() => {
+    if (file) {
+      resetState();
     }
-
-    const fileSize = toMBString(file.size); // MB
-
-    if (fileSize > maxFileSize) {
-      setError(ErrorMessages.fileTooBig);
-    }
-  }, [file]);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleLoadStart = useCallback((_event: ProgressEvent<FileReader>) => {
-    setProgress(0);
-  }, []);
-
-  const handleError = useCallback((event: ProgressEvent<FileReader>) => {
-    setError(event.target?.error?.message);
-    setProgress(0);
-  }, []);
-
-  const handleProgress = useCallback((event: ProgressEvent<FileReader>) => {
-    setProgress((event.loaded / event.total) * 100);
-  }, []);
-
-  const handleLoadEnd = useCallback(
-    async (entry: ProgressEvent<FileReader>) => {
-      if (!entry.target?.result) {
-        return;
-      }
-
-      if (typeof entry.target?.result === 'string') {
-        return;
-      }
-
-      setHash(
-        blobToHash(await crypto.subtle.digest('SHA-256', entry.target.result))
-      );
-    },
-    []
-  );
+  }, [file, resetState]);
 
   const readFile = useCallback(() => {
-    const fileReader = new FileReader();
+    resetState();
+    callWorker(file);
+  }, [callWorker, file, resetState]);
 
-    if (!file) {
-      return;
+  useEffect(() => {
+    if (response) {
+      if (response.error) {
+        setError(response.error);
+      }
+
+      if (response.result) {
+        setHash(response.result);
+      }
+
+      if (response.progress) {
+        setProgress(response.progress);
+      }
     }
-
-    fileReader.readAsArrayBuffer(file);
-    fileReader.onloadstart = handleLoadStart;
-    fileReader.onerror = handleError;
-    fileReader.onprogress = handleProgress;
-    fileReader.onloadend = handleLoadEnd;
-  }, [file, handleLoadStart, handleError, handleProgress, handleLoadEnd]);
+  }, [response]);
 
   return {
     readFile,

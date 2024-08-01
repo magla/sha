@@ -9,7 +9,7 @@ Object.defineProperty(globalThis, 'crypto', {
           return new TextEncoder().encode('test');
         }
         throw new Error('Unsupported algorithm');
-      }
-    }
-  }
+      },
+    },
+  },
 });
