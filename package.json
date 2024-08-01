@@ -1,7 +1,7 @@
 {
   "name": "sha256",
   "private": false,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "unit": "jest --watch --config jest.config.js",
     "e2e": "cypress open --e2e --browser chrome",
-    "format": "prettier --write ./src"
+    "format": "prettier --write ./src",
+    "docker": "docker build . -t \"sha:v1.0\" && docker run -p 8080:8080 sha:v1.0"
   },
   "dependencies": {
     "react": "^18.3.1",
