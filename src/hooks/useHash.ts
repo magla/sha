@@ -1,53 +1,46 @@
-import { useCallback, useState } from 'react';
-import { blobToHash } from '../helpers/file';
+import { useCallback, useEffect, useState } from 'react';
+import { useWebWorker } from './useWebWorker';
 
-export const useHash = () => {
-  const [progress, setProgress] = useState(0);
+export const useHash = (file?: Blob) => {
   const [hash, setHash] = useState<string | undefined>();
-  const [error, setError] = useState<DOMException | undefined | null>();
+  const [error, setError] = useState<string | undefined>();
+  const [progress, setProgress] = useState<number | null>(null);
 
-  const handleError = useCallback(async (event: ProgressEvent<FileReader>) => {
-    debugger;
-    setError(event.target?.error);
-  }, []);
+  const { response, callWorker, terminateWorker } = useWebWorker();
 
-  const handleProgress = useCallback(
-    async (event: ProgressEvent<FileReader>) => {
-      debugger;
-      setProgress(event.loaded);
-    },
-    []
-  );
+  const resetState = useCallback(() => {
+    setHash(undefined);
+    setError(undefined);
+    setProgress(null);
+    terminateWorker();
+  }, [terminateWorker]);
 
-  const handleLoadEnd = useCallback(
-    async (entry: ProgressEvent<FileReader>) => {
-      debugger;
-      if (!entry.target?.result) {
-        return;
+  useEffect(() => {
+    if (file) {
+      resetState();
+    }
+  }, [file, resetState]);
+
+  const readFile = useCallback(() => {
+    resetState();
+    callWorker(file);
+  }, [callWorker, file, resetState]);
+
+  useEffect(() => {
+    if (response) {
+      if (response.error) {
+        setError(response.error);
       }
 
-      if (typeof entry.target?.result === 'string') {
-        return;
+      if (response.result) {
+        setHash(response.result);
       }
 
-      setHash(
-        blobToHash(await crypto.subtle.digest('SHA-256', entry.target.result))
-      );
-    },
-    [blobToHash]
-  );
-
-  const readFile = useCallback(
-    (file: Blob) => {
-      const fileReader = new FileReader();
-
-      fileReader.readAsArrayBuffer(file);
-      fileReader.onerror = handleError;
-      fileReader.onprogress = handleProgress;
-      fileReader.onloadend = handleLoadEnd;
-    },
-    [handleError, handleProgress, handleLoadEnd]
-  );
+      if (response.progress) {
+        setProgress(response.progress);
+      }
+    }
+  }, [response]);
 
   return {
     readFile,
