@@ -1,15 +1,7 @@
 # File upload (TS, React, Vite)
 
-## Development
-
-1. Run `yarn`
-2. Run `yarn dev`
-
-## Production
-
 1. Run `yarn`
 2. Run `yarn build`
-3. Run `yarn preview`
 
 ## Testing
 
