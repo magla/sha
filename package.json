@@ -10,7 +10,7 @@
     "unit": "jest --watch --config jest.config.js",
     "e2e": "cypress open --e2e --browser chrome",
     "format": "prettier --write ./src",
-    "docker": "docker build . -t \"sha:v1.0\" && docker run -p 8080:8080 sha:v1.0"
+    "serve": "docker build . -t \"maggie-sha:v1.0\" && docker run -p 8080:8080 maggie-sha:v1.0"
   },
   "dependencies": {
     "react": "^18.3.1",
