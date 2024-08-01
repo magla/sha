@@ -1,4 +1,4 @@
-# File upload (TS, React, Vite)
+# SHA256 for file (TS, React, Vite)
 
 1. Run `yarn`
 2. Run `yarn build`
